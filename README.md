@@ -17,7 +17,6 @@ about when to use it, when not to use it and what are some of the caveats in the
   * Database Abstraction Layer, one of the following:
     * [Zend Framework 2.2 Zend\Db](https://github.com/zendframework/zf2) or
     * [Doctrine DBAL 2.3+](https://github.com/doctrine/dbal)
-    * 
 
 ### Installation using Composer
 
