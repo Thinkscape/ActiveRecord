@@ -137,7 +137,7 @@ trait ZendDb
      *     3) App\ModelSubclass::setDefaultDb();
      *        Assuming ModelClassSubclass extends ModelClass, this will set a default adapter for this subclass.
      *
-     * @param Adapter|null $db Adapter to use, or null to remove reference for particular class.
+     * @param  Adapter|null $db Adapter to use, or null to remove reference for particular class.
      * @return void
      */
     public static function setDefaultDb(Adapter $db = null)

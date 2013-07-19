@@ -8,32 +8,32 @@ interface PersistenceInterface
      *
      * @return void
      */
-    function save();
+    public function save();
 
     /**
      * Load instance data from the database
      *
      * @return void
      */
-    function load();
+    public function load();
 
     /**
      * Reload data from the database
      * @return void
      */
-    function reload();
+    public function reload();
 
     /**
      * Delete the instance presence from the database
      *
      * @return mixed
      */
-    function delete();
+    public function delete();
 
     /**
      * Retrieve model field names from the database
      *
      * @return mixed
      */
-    static function getFieldsFromDatabase();
+    public static function getFieldsFromDatabase();
 }

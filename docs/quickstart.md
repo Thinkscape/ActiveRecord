@@ -1,6 +1,8 @@
  ActiveRecord quick start
 =========================
 
+[![Build Status](https://api.travis-ci.org/Thinkscape/ActiveRecord.png?branch=master)](http://travis-ci.org/Thinkscape/ActiveRecord)
+
 Before you jump into quick start, make sure you are using PHP 5.4, you have installed the component into
 your application and you have included [Composer autoloader](../README.md#installation-using-composer) or
 the included [autoload_register.php](../README.md#manual-installation).

@@ -1,6 +1,6 @@
 <?php
 namespace Thinkscape\ActiveRecord;
 
-trait Core {
-    
+trait Core
+{
 }
