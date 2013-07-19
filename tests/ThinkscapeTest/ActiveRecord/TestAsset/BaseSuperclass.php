@@ -8,11 +8,13 @@ class BaseSuperclass extends AbstractActiveRecord
 {
     use Persistence\ZendDb;
 
-    public function publicGetDb(){
+    public function publicGetDb()
+    {
         return $this->getDb();
     }
 
-    public static function publicStaticGetDb(){
+    public static function publicStaticGetDb()
+    {
         return static::getDefaultDb();
     }
 }

@@ -4,13 +4,12 @@ namespace ThinkscapeTest\ActiveRecord;
 use ThinkscapeTest\ActiveRecord\TestAsset\BaseSubclass;
 use ThinkscapeTest\ActiveRecord\TestAsset\BaseSuperclass;
 use Zend\Db\Adapter\Adapter;
-use Zend\Db\Adapter\Profiler;
 use Thinkscape\ActiveRecord\Persistence\ZendDb;
 
 class ZendDbTest extends \PHPUnit_Framework_TestCase
 {
-    public function setup() {
-
+    public function setup()
+    {
     }
 
     public function tearDown()
@@ -31,6 +30,7 @@ class ZendDbTest extends \PHPUnit_Framework_TestCase
         $mockPlatform = $this->getMock('Zend\Db\Adapter\Platform\PlatformInterface');
         $mockStatement = $this->getMock('Zend\Db\Adapter\Driver\StatementInterface');
         $mockDriver->expects($this->any())->method('createStatement')->will($this->returnValue($mockStatement));
+
         return new Adapter($mockDriver, $mockPlatform);
     }
 
@@ -116,6 +116,5 @@ class ZendDbTest extends \PHPUnit_Framework_TestCase
         $this->assertSame($adapter3, $instance2::publicStaticGetDb());
 
     }
-
 
 }
