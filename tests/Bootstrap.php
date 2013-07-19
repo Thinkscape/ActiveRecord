@@ -11,10 +11,19 @@ if (class_exists('PHPUnit_Runner_Version', true)) {
             PHPUnit_Runner_Version::id() .
             ') is not supported for ThinkscapeTest unit tests - use v 3.7.0 or higher.'
             . PHP_EOL
+            . PHP_EOL
         ;
         exit(1);
     }
     unset($phpUnitVersion);
+}
+
+/**
+ * Make sure we're running a recent PHP version
+ */
+if(version_compare(PHP_VERSION, '5.4.3', '<')) {
+    echo 'This component requires PHP version 5.4.3 or newer.\n';
+    exit(1);
 }
 
 /**
