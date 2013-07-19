@@ -29,10 +29,5 @@
         "zendframework/zend-db" : "Zend\\Db integration.",
         "doctrine/dbal"         : "Doctrine DBAL integration.",
         "pecl-mongo"            : "MongoDB integration"
-    },
-    "extra": {
-        "branch-alias": {
-            "dev-master": "*"
-        }
     }
 }
