@@ -25,6 +25,11 @@
         "phpunit/phpunit"       : "~3.7",
         "satooshi/php-coveralls": "~0.6"
     },
+    "suggest" : {
+        "zendframework/zend-db" : "Zend\\Db integration.",
+        "doctrine/dbal"         : "Doctrine DBAL integration.",
+        "pecl-mongo"            : "MongoDB integration"
+    },
     "extra": {
         "branch-alias": {
             "dev-master": "*"
