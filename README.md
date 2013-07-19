@@ -1,5 +1,7 @@
 ActiveRecord
 ==============
+[![Build Status](https://api.travis-ci.org/Thinkscape/ActiveRecord.png?branch=master)](http://travis-ci.org/Thinkscape/ActiveRecord)
+[![Coverage Status](https://coveralls.io/repos/Thinkscape/ActiveRecord/badge.png)](https://coveralls.io/r/Thinkscape/ActiveRecord)
 
 Modern ActiveRecord implementation for PHP 5.4+
 
