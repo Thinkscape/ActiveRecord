@@ -1,0 +1,27 @@
+<phpunit bootstrap="./Bootstrap.php" colors="true">
+    <testsuites>
+        <testsuite name="ZendDiagnostics Test Suite">
+            <directory>./ThinkscapeTest/ActiveRecord</directory>
+            <exclude>./ThinkscapeTest/ActiveRecord/TestAsset/</exclude>
+        </testsuite>
+    </testsuites>
+
+    <groups>
+        <exclude>
+        </exclude>
+    </groups>
+
+    <listeners>
+    </listeners>
+
+    <filter>
+        <blacklist>
+            <directory suffix=".php">./ThinkscapeTest</directory>
+            <directory>../vendor</directory>
+        </blacklist>
+    </filter>
+
+    <php>
+    </php>
+
+</phpunit>

@@ -1,0 +1,31 @@
+{
+    "name": "thinkscape/activerecord",
+    "description": "Modern ActiveRecord implementation for PHP 5.4+",
+    "keywords": [
+        "activerecord",
+        "active",
+        "record",
+        "db",
+        "orm"
+    ],
+    "homepage": "https://github.com/Thinkscape/ActiveRecord",
+    "license": "MIT",
+    "autoload": {
+        "psr-0": {
+            "Thinkscape\\": "src",
+            "ThinkscapeTest\\": "tests/"
+        }
+    },
+    "require": {
+        "php": ">=5.4.3"
+    },
+    "require-dev": {
+        "zendframework/zend-db": "2.*",
+        "doctrine/dbal": "2.3.*"
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-master": "*"
+        }
+    }
+}
