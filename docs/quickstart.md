@@ -2,8 +2,8 @@
 =========================
 
 Before you jump into quick start, make sure you are using PHP 5.4, you have installed the component into
-your application and you have included [Composer autoloader](../README.md#installationusingcomposer) or
-the included [autoload_register.php](../README.md#manualinstallation).
+your application and you have included [Composer autoloader](../README.md#installation-using-composer) or
+the included [autoload_register.php](../README.md#manual-installation).
 
 ## Writing model classes
 
@@ -27,8 +27,8 @@ class Country
 
 In order to make the class an ActiveRecord, at minimum, you have to add the following traits:
 
- * The core: [Thinkscape\ActiveRecord\Core](../src/Thinkscape/ActiveRecord/Core.php)
- * Database persistence, one of the following `Thinkscape\ActiveRecord\Persistence`:
+ 1. [ActiveRecord\Core](../src/Thinkscape/ActiveRecord/Core.php)
+ 2. `ActiveRecord\Persistence`, one of the following:
     * [ZendDb](../src/Thinkscape/ActiveRecord/Persistence/ZendDb.php) or
     * [DoctrineDBAL](../src/Thinkscape/ActiveRecord/Persistence/DoctrineDBAL.php) or
     * [Mongo](../src/Thinkscape/ActiveRecord/Persistence/Mongo.php)
@@ -71,7 +71,7 @@ $adapter = Adapter(array(
    'password' => 'developer-password'
 ));
 
-// Method 1. Setting default adapter for all ActiveRecord instances
+// Method 1. Set default adapter for all ActiveRecord instances
 Thinkscape\ActiveRecord\Persistence\ZendDb::setDefaultDb($adapter);
 
 // Method 2. Set default adapter for our Country class
