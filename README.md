@@ -1,7 +1,5 @@
-ActiveRecord
-==============
-[![Build Status](https://api.travis-ci.org/Thinkscape/ActiveRecord.png?branch=master)](http://travis-ci.org/Thinkscape/ActiveRecord)
-[![Coverage Status](https://coveralls.io/repos/Thinkscape/ActiveRecord/badge.png)](https://coveralls.io/r/Thinkscape/ActiveRecord)
+ActiveRecord  [![Build Status](https://api.travis-ci.org/Thinkscape/ActiveRecord.png?branch=master)](http://travis-ci.org/Thinkscape/ActiveRecord) [![Coverage Status](https://coveralls.io/repos/Thinkscape/ActiveRecord/badge.png)](https://coveralls.io/r/Thinkscape/ActiveRecord)
+=============
 
 Modern ActiveRecord implementation for PHP 5.4+
 
@@ -79,7 +77,7 @@ In order to make the class an ActiveRecord, at minimum, you have to add the foll
     [ZendDb](../src/Thinkscape/ActiveRecord/Persistence/ZendDb.php),
     [DoctrineDBAL](../src/Thinkscape/ActiveRecord/Persistence/DoctrineDBAL.php),
     [Mongo](../src/Thinkscape/ActiveRecord/Persistence/Mongo.php),
-    [Memory](../src/Thinkscape/ActiveRecord/Persistence/Mongo.php).
+    [Memory](../src/Thinkscape/ActiveRecord/Persistence/Memory.php).
 
 Let's update the class to make it an ActiveRecord using Zend\Db:
 
@@ -102,22 +100,15 @@ class Country
 
 ### 2) Connect to the database
 
-All [persistence methods](persistence.md) (such as ZendDb, DoctrineDBAL, Mongo) require a working database connection.
-We have to create a new connection adapter and configure it with ActiveRecord.
+All [persistence methods](persistence.md) (such as ZendDb, DoctrineDBAL, ...) require a working database connection.
+We have to create a new connection adapter and configure it with ActiveRecord:
 
-There are 3 ways to configure database with ActiveRecord:
-
- 1. We can set default db adapter for every ActiveRecord.
- 2. We can set default db adapter for every instance of our class (i.e. class `Country`).
- 3. We can set db adapter for a particular single instance.
-
-Here is an example showing all 3 methods with Zend\Db persistence method:
 
 ````php
 use Zend\Db\Adapter\Adapter;
 
-// Create MySQL adapter using Zend\Db
-$adapter = Adapter(array(
+// Create Zend\Db MySQLi adapter
+$adapter = new Adapter(array(
    'driver'   => 'Mysqli',
    'database' => 'my_application',
    'username' => 'developer',
@@ -127,7 +118,7 @@ $adapter = Adapter(array(
 // Method 1. Set default adapter for all ActiveRecord instances
 Thinkscape\ActiveRecord\Persistence\ZendDb::setDefaultDb($adapter);
 
-// Method 2. Set default adapter for our Country class
+// Method 2. Set default adapter for Country class
 Country::setDefaultDb($adapter);
 
 // Method 3. Create an instance and assign an adapter to it
@@ -135,7 +126,7 @@ $finland = new Country();
 $finland->setDb($adapter);
 ````
 
-> More info on [persistence methods](docs/persistence.md)
+> [More info on persistence methods and configuring database](docs/persistence.md)
 
 ### 3) Insert, update and delete records
 
@@ -153,7 +144,7 @@ $finland->save();      // UPDATE country SET name = "Maamme"
 $finland->delete();    // DELETE FROM country WHERE id = 1
 ````
 
-> More info on [CRUD operation](docs/CRUD.md)
+> [More info on CRUD operations](docs/CRUD.md)
 
 ### 4) Retrieve records from database
 
@@ -184,28 +175,30 @@ $allBigCountries = Country::findAll([
 // SELECT * FROM country WHERE population >= 30000000
 
 ````
-> More info on [queries and finding records](docs/queries.md)
+> [More info on queries and finding records](docs/queries.md)
 
 ### 5) Add more features to your class
 
- * ActiveRecord\ReadonlyAttributes
- * ActiveRecord\ModelSchema
- * ActiveRecord\Inheritance
- * ActiveRecord\Scoping
- * ActiveRecord\Sanitization
+ * ActiveRecord\AttributeMethods
  * ActiveRecord\Aliasing
+ * ActiveRecord\Aggregations
+ * ActiveRecord\Associations
  * ActiveRecord\Conversion
- * ActiveRecord\Integration
- * ActiveRecord\Validations
  * ActiveRecord\CounterCache
+ * ActiveRecord\Callbacks
+ * ActiveRecord\Inheritance
+ * ActiveRecord\Integration
  * ActiveRecord\Locking\Optimistic
  * ActiveRecord\Locking\Pessimistic
- * ActiveRecord\AttributeMethods
- * ActiveRecord\Callbacks
- * ActiveRecord\Timestamp
- * ActiveRecord\Associations
+ * ActiveRecord\ModelSchema
  * ActiveRecord\NestedAttributes
- * ActiveRecord\Aggregations
- * ActiveRecord\Transactions
  * ActiveRecord\Reflection
+ * ActiveRecord\Readonly
+ * ActiveRecord\ReadonlyAttributes
+ * ActiveRecord\Scoping
  * ActiveRecord\Serialization
+ * ActiveRecord\Sanitization
+ * ActiveRecord\Timestamp
+ * ActiveRecord\Transactions
+ * ActiveRecord\Validations
+
