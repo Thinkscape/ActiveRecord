@@ -1,21 +1,43 @@
 <?php
 namespace ThinkscapeTest\ActiveRecord;
 
+use Thinkscape\ActiveRecord\Persistence\ZendDb;
 use ThinkscapeTest\ActiveRecord\TestAsset\BaseSubclass;
 use ThinkscapeTest\ActiveRecord\TestAsset\BaseSuperclass;
 use Zend\Db\Adapter\Adapter;
-use Thinkscape\ActiveRecord\Persistence\ZendDb;
 
-class ZendDbTest extends \PHPUnit_Framework_TestCase
+class ZendDbTest extends AbstractPersistenceTest
 {
+    /**
+     * @var Adapter
+     */
+    protected $adapter;
+
     public function setup()
     {
+        if (!class_exists('Zend\Db\Adapter\Adapter')) {
+            $this->markTestSkipped('Zend\Db is required for this test.');
+        }
     }
 
     public function tearDown()
     {
+        if (!class_exists('Zend\Db\Adapter\Adapter')) {
+            return;
+        }
+
         // reset default db adapter
         ZendDb::setDefaultDb(null);
+    }
+
+    protected function assertEntityPersisted($entity)
+    {
+        $this->markTestIncomplete('Zend\Db Persistence is not yet implemented');
+    }
+
+    protected function assertEntityPropertyPersisted($value, $instance, $property)
+    {
+        $this->markTestIncomplete('Zend\Db Persistence is not yet implemented');
     }
 
     /**

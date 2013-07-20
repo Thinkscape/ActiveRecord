@@ -22,7 +22,7 @@ trait ZendDb
     {
     }
 
-    public function getFieldsFromDatabase()
+    public function getPropertiesFromDb()
     {
     }
 

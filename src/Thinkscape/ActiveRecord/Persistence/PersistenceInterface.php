@@ -35,5 +35,5 @@ interface PersistenceInterface
      *
      * @return mixed
      */
-    public static function getFieldsFromDatabase();
+    public static function getPropertiesFromDb();
 }
