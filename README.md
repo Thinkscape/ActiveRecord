@@ -41,6 +41,15 @@ Before you jump into quick start, make sure you are using PHP 5.4, you have inst
 your application and you have included [Composer autoloader](../README.md#installation-using-composer) or
 the included [autoload_register.php](../README.md#manual-installation).
 
+## Documentation
+
+ * [Quick Start](#quick-start)
+ * [Configuration](docs/config.md)
+ * [CRUD - Create, Read, Update, Delete](docs/CRUD.md)
+ * [Queries and traversal](docs/queries.md)
+ * [Persistence methods and DB configuration](docs/persistence.md)
+ * [Features and add-ons](docs/features.md)
+
 ## Quick Start
 
 ### 1) Make your classes ActiveRecords
@@ -155,7 +164,7 @@ $first = Country::findFirst();
 $countryById = Country::findById(220);
 // SELECT * FROM country WHERE id = 220
 
-$countryByName = Country::findOneBy('name', 'Finland);
+$countryByName = Country::findOneBy('name', 'Finland');
 // SELECT * FROM country WHERE name = "Finland" LIMIT 1
 
 $countryByName = Country::findOne([
@@ -177,7 +186,7 @@ $allBigCountries = Country::findAll([
 ````
 > More info on [queries and finding records](docs/queries.md)
 
-### 5) Add more features
+### 5) Add more features to your class
 
  * ActiveRecord\ReadonlyAttributes
  * ActiveRecord\ModelSchema
@@ -200,11 +209,3 @@ $allBigCountries = Country::findAll([
  * ActiveRecord\Transactions
  * ActiveRecord\Reflection
  * ActiveRecord\Serialization
-
-## Documentation
-
- * [Configuration](docs/config.md)
- * [CRUD](docs/CRUD.md)
- * [Queries and traversal](docs/queries.md)
- * [Persistence](docs/persistence.md)
- * [Features](docs/features.md)
