@@ -1,9 +1,8 @@
-Persistence and DB settings
-=============================
+ActiveRecord Zend\Db Persistence
+======================
 
-## Persistence\ZendDb
-
-ActiveRecord can use `Zend\Db` DBAL to store data in various SQL databases.
+ActiveRecord can use `Zend\Db` DBAL to store data in various SQL databases. More information on how to use
+Zend\Db can be found in the [official ZF2 documentation](http://framework.zend.com/manual/2.2/en/modules/zend.db.adapter.html).
 
 ### Default DB adapter
 

@@ -13,6 +13,7 @@ The ActiveRecord pattern has been discussed, debated, critiqued and praised for 
 about when to use it, when not to use it and what are some of the caveats in the following document: 
 [docs/discussion.md](docs/discussion.md).
 
+## Installation
 ### Requirements
 
   * PHP 5.4.3 or newer
@@ -24,7 +25,7 @@ about when to use it, when not to use it and what are some of the caveats in the
 
  1. Inside your app directory run `composer require thinkscape/activerecord:dev-master`
  2. Make sure you are using composer autoloader: `include "vendor/autoload.php";`
- 3. Follow [quick start](docs/quickstart.md) instructions.
+ 3. Follow [quick start](#quick-start) instructions.
 
 ### Manual installation
  
@@ -34,6 +35,176 @@ about when to use it, when not to use it and what are some of the caveats in the
  2. Set up class autoloading by either:
    * using the provided autoloader: `require "init_autoload.php";`, or
    * adding `src` directory as namespace `Thinkscape\ActiveRecord` to your existent autoloader.
- 3. Follow [quick start](docs/quickstart.md) instructions.
+ 3. Follow [quick start](#quick-start) instructions.
+
+Before you jump into quick start, make sure you are using PHP 5.4, you have installed the component into
+your application and you have included [Composer autoloader](../README.md#installation-using-composer) or
+the included [autoload_register.php](../README.md#manual-installation).
+
+## Quick Start
+
+### 1) Make your classes ActiveRecords
+
+ActiveRecord is used to add database functionality to your existing model classes. For example, let's consider
+the following class:
+
+````php
+class Country
+{
+    protected $name;
+
+    public function getName(){
+        return $this->name;
+    }
+
+    public function setName($name){
+        $this->name = $name;
+    }
+}
+````
+
+In order to make the class an ActiveRecord, at minimum, you have to add the following traits:
+
+ 1. [ActiveRecord\Core](../src/Thinkscape/ActiveRecord/Core.php)
+ 2. [ActiveRecord\Persistence](../src/Thinkscape/ActiveRecord/Persistence), one of the following:
+    [ZendDb](../src/Thinkscape/ActiveRecord/Persistence/ZendDb.php),
+    [DoctrineDBAL](../src/Thinkscape/ActiveRecord/Persistence/DoctrineDBAL.php),
+    [Mongo](../src/Thinkscape/ActiveRecord/Persistence/Mongo.php),
+    [Memory](../src/Thinkscape/ActiveRecord/Persistence/Mongo.php).
+
+Let's update the class to make it an ActiveRecord using Zend\Db:
+
+````php
+use Thinkscape\ActiveRecord;
+
+class Country
+{
+    use ActiveRecord\Core;
+    use ActiveRecord\Persistence\ZendDb;
+
+    protected static $_properties = ['name'];
+
+    // ...
+}
+````
+
+> More info on [configuring ActiveRecords](docs/config.md)
 
 
+### 2) Connect to the database
+
+All [persistence methods](persistence.md) (such as ZendDb, DoctrineDBAL, Mongo) require a working database connection.
+We have to create a new connection adapter and configure it with ActiveRecord.
+
+There are 3 ways to configure database with ActiveRecord:
+
+ 1. We can set default db adapter for every ActiveRecord.
+ 2. We can set default db adapter for every instance of our class (i.e. class `Country`).
+ 3. We can set db adapter for a particular single instance.
+
+Here is an example showing all 3 methods with Zend\Db persistence method:
+
+````php
+use Zend\Db\Adapter\Adapter;
+
+// Create MySQL adapter using Zend\Db
+$adapter = Adapter(array(
+   'driver'   => 'Mysqli',
+   'database' => 'my_application',
+   'username' => 'developer',
+   'password' => 'developer-password'
+));
+
+// Method 1. Set default adapter for all ActiveRecord instances
+Thinkscape\ActiveRecord\Persistence\ZendDb::setDefaultDb($adapter);
+
+// Method 2. Set default adapter for our Country class
+Country::setDefaultDb($adapter);
+
+// Method 3. Create an instance and assign an adapter to it
+$finland = new Country();
+$finland->setDb($adapter);
+````
+
+> More info on [persistence methods](docs/persistence.md)
+
+### 3) Insert, update and delete records
+
+````php
+// Create new record
+$finland = new Country();
+$finland->setName('Finland');
+$finland->save();      // INSERT INTO country (name) VALUES ("Finland")
+
+// Update
+$finland->setName('Maamme');
+$finland->save();      // UPDATE country SET name = "Maamme"
+
+// Delete
+$finland->delete();    // DELETE FROM country WHERE id = 1
+````
+
+> More info on [CRUD operation](docs/CRUD.md)
+
+### 4) Retrieve records from database
+
+````php
+$first = Country::findFirst();
+// SELECT * FROM country ORDER BY id ASC LIMIT 1
+
+$countryById = Country::findById(220);
+// SELECT * FROM country WHERE id = 220
+
+$countryByName = Country::findOneBy('name', 'Finland);
+// SELECT * FROM country WHERE name = "Finland" LIMIT 1
+
+$countryByName = Country::findOne([
+    'name' => 'Finland'
+]);
+// SELECT * FROM country WHERE name = "Finland" LIMIT 1
+
+$allEuropeanCountries = Country::findAll([
+    'continent' => 'Europe'
+]);
+// SELECT * FROM country WHERE continent = "Finland"
+
+
+$allBigCountries = Country::findAll([
+    ['population', 'gt', 30000000]
+]);
+// SELECT * FROM country WHERE population >= 30000000
+
+````
+> More info on [queries and finding records](docs/queries.md)
+
+### 5) Add more features
+
+ * ActiveRecord\ReadonlyAttributes
+ * ActiveRecord\ModelSchema
+ * ActiveRecord\Inheritance
+ * ActiveRecord\Scoping
+ * ActiveRecord\Sanitization
+ * ActiveRecord\Aliasing
+ * ActiveRecord\Conversion
+ * ActiveRecord\Integration
+ * ActiveRecord\Validations
+ * ActiveRecord\CounterCache
+ * ActiveRecord\Locking\Optimistic
+ * ActiveRecord\Locking\Pessimistic
+ * ActiveRecord\AttributeMethods
+ * ActiveRecord\Callbacks
+ * ActiveRecord\Timestamp
+ * ActiveRecord\Associations
+ * ActiveRecord\NestedAttributes
+ * ActiveRecord\Aggregations
+ * ActiveRecord\Transactions
+ * ActiveRecord\Reflection
+ * ActiveRecord\Serialization
+
+## Documentation
+
+ * [Configuration](docs/config.md)
+ * [CRUD](docs/CRUD.md)
+ * [Queries and traversal](docs/queries.md)
+ * [Persistence](docs/persistence.md)
+ * [Features](docs/features.md)
