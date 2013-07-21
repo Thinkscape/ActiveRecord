@@ -8,8 +8,8 @@ use Traversable;
  *
  * ActiveRecord configuration consists of the following static properties:
  *
- * @staticvar array $_properties                 A map of available (and accessible) entity properties.
- * @staticvar bool  $_retrievePropertiesFromDb   Flag to determine if properties can be derived from DB column names.
+ * @staticvar array  $_properties                A map of available (and accessible) entity properties.
+ * @staticvar bool   $_retrievePropertiesFromDb  Flag to determine if properties can be derived from DB column names.
  *                                               (defaults tro true)
  */
 trait Core
@@ -43,6 +43,19 @@ trait Core
     protected $isLoaded = false;
 
     /**
+     * A map of
+     * @var bool
+     */
+    protected static $_isARinit = [];
+
+    /**
+     * ActiveRecord event manager static storage
+     *
+     * @var array
+     */
+    protected static $_AREM = [];
+
+    /**
      * Creates new ActiveRecord instance.
      *
      * @param  array|Traversable                  $data
@@ -50,6 +63,15 @@ trait Core
      */
     public function __construct($data = [])
     {
+        // Init AR features for this class. This is currently the only way to implement static,
+        // class-level initialization tasks for classes using traits, because traits cannot
+        // be extended, cannot access each-other methods and are mostly invisible to class methods
+        // on runtime.
+        if (!isset(static::$_isARinit[get_called_class()])) {
+            static::initActiveRecord();
+        }
+
+        // validate incoming data
         if (!is_array($data) && !$data instanceof Traversable) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'Cannot construct new %s using %s - expected array or \Traversable',
@@ -120,6 +142,53 @@ trait Core
     }
 
     /**
+     * Walk through all traits for current class and run init methods for features
+     *
+     * Warning: if this method is overridden in model class, you have to manually copy and paste the
+     *          code from here, because it is currently impossible to change scope of static method calls;
+     *          calling Core::initActiveRecord() will change "static::" scope to the trait itself.
+     */
+    protected static function initActiveRecord()
+    {
+        $className = get_called_class();
+        $traits = class_uses($className,false);
+
+        foreach ($traits as $traitName) {
+            $traitName = substr($traitName, strrpos($traitName, '\\') + 1);
+            $initMethod = 'initAR' . $traitName;
+            if (method_exists($className, $initMethod)) {
+                /**
+                 * We are using PHP 5.4+ variable static method invocation
+                 * which is 2x to 6x faster than call_user_func()
+                 * @link http://3v4l.org/SlOpr
+                 */
+                static::{$initMethod}();
+            }
+        }
+
+        static::$_isARinit[get_called_class()] = true;
+    }
+
+    /**
+     * Trigger all listeners attached to current class for $eventName.
+     *
+     * @param  string $eventName Name of the event to trigger
+     * @param  array  $arguments
+     * @return void
+     */
+    protected static function _arTriggerAll($eventName, array $arguments = [])
+    {
+        $className = get_called_class();
+        if (empty(static::$_AREM[$className]) || empty(static::$_AREM[$className][$eventName]) ) {
+            return;
+        }
+
+        foreach (static::$_AREM[$className][$eventName] as $callable) {
+            call_user_func_array($callable, $arguments);
+        }
+    }
+
+    /**
      * Retrieve property value
      *
      * @param $prop
@@ -179,6 +248,11 @@ trait Core
 
             // Check if a key exists in the storage and update it
             if (array_key_exists($prop, $this->_data)) {
+
+                // Run the value through features' filters
+                static::_arTriggerAll('Core.beforeSet', array(&$this, &$val, $prop));
+
+                // Store the value
                 $this->_data[$prop] = $val;
                 $this->_dirtyData[$prop] = true;
             } else {
@@ -200,6 +274,11 @@ trait Core
 
             // Check if column (property) exists before trying to set it
             if (array_key_exists($prop, static::$_properties)) {
+
+                // Run the value through features' filters
+                static::_arTriggerAll('Core.beforeSet', array(&$this, &$val, $prop));
+
+                // Store the value
                 $this->_data[$prop] = $val;
                 $this->_dirtyData[$prop] = true;
             } else {
