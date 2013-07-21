@@ -1,21 +1,21 @@
-ActiveRecord\PropertyFilter
-=================================
+PropertyFilter feature
+========================
 
-**PropertyFilter** allows for filtering property values just before storing them and saving to database.
+**PropertyFilter** sanitizes values just before storing them and saving to database.
 
 Note that this feature is not required for escaping data before storing it in the database (this is already taken
 care of). You can use PropertyFilter to apply custom filtering logic to your model classes properties.
 
-## Using with filter definitions
+## Basic usage
 
  1. Import `PropertyFilter` trait
  2. Configure `$_filters` static property
      * The property is an array of property names and respective filters.
-     * Array key corresponds to property name.
-     * Array value can be a filter or an array of filters.
+     * Key corresponds to property name.
+     * Value can be a filter or an array of filters.
      * A filter is a [PHP callable](http://www.php.net/manual/en/language.types.callable.php)
       (a string with function name or an array of class and method name).
-     * Filter function is provided with value and is expected to return result of filtration.
+     * Filter is called with a value and is expected to return a result.
  3. Each time filtered properties are updated they will be processed by filters.
 
 ````php
@@ -55,7 +55,7 @@ echo $country->name . ' has population of ' . $country->population;
 ````
 
 
-## Using filteringProperty
+## Overriding filterProperty() method
 
 It is also possible to override the `filterProperty()` method and write custom filtering logic in scope of
 the filtered instance.
