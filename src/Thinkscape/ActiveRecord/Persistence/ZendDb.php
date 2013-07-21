@@ -4,6 +4,11 @@ namespace Thinkscape\ActiveRecord\Persistence;
 use Zend\Db\Adapter\Adapter;
 use Thinkscape\ActiveRecord\Exception\ConfigException;
 
+/**
+ * Zend\Db based persistence functionality.
+ *
+ * @staticvar string $_dbTable                   Name of db table (collection) for storing record data.
+ */
 trait ZendDb
 {
     public function save()
@@ -76,6 +81,25 @@ trait ZendDb
 
         // Try to get the default database for this class
         return static::getDefaultDb();
+    }
+
+    /**
+     * Get db table (collection) name for storing this ActiveRecord data.
+     *
+     * @return string
+     */
+    public function getDbTable()
+    {
+        if (!empty(static::$_dbTable)) {
+            return static::$_dbTable;
+        } else {
+            // infer db table from class name
+            $table = get_called_class();
+            $table = substr($table, strrpos($table, '\\') + 1);
+            $table = strtolower($table);
+
+            return static::$_dbTable = $table;
+        }
     }
 
     /**

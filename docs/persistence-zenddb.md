@@ -109,3 +109,34 @@ Bar::setDefaultDb($adapter2);
 $foo = new Bar();    // this subclass will also use $adapter2
 ````
 
+### Setting db table name
+
+Each ActiveRecord class should provide table name for storing it's data. This can be archived in couple ways:
+
+#### The dbTable static property
+
+````php
+class Country {
+    use ActiveRecord\Core;
+    use ActiveRecord\Persistence\ZendDb;
+
+    protected static $_dbTable = 'countries';
+}
+````
+
+#### The getTable() method
+
+````php
+class Country {
+    use ActiveRecord\Core;
+    use ActiveRecord\Persistence\ZendDb;
+
+    protected method getTable()
+    {
+        return 'countries';
+    }
+}
+````
+
+> The getTable() method can be used to implement [table-based sharding](http://en.wikipedia.org/wiki/Sharding) - inside
+> this method you can access instance ID and internal data to decide on what table will be used for accessing data.

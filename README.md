@@ -89,6 +89,7 @@ class Country
     use ActiveRecord\Core;
     use ActiveRecord\Persistence\ZendDb;
 
+    protected static $_dbTable    = 'countries';
     protected static $_properties = ['name'];
 
     // ...
@@ -179,6 +180,8 @@ $allBigCountries = Country::findAll([
 
 ### 5) Add more features to your class
 
+ * [ActiveRecord\PropertyFilter](docs/property-filter.md)
+
  * ActiveRecord\AttributeMethods
  * ActiveRecord\Aliasing
  * ActiveRecord\Aggregations
@@ -197,7 +200,6 @@ $allBigCountries = Country::findAll([
  * ActiveRecord\ReadonlyAttributes
  * ActiveRecord\Scoping
  * ActiveRecord\Serialization
- * ActiveRecord\Sanitization
  * ActiveRecord\Timestamp
  * ActiveRecord\Transactions
  * ActiveRecord\Validations
