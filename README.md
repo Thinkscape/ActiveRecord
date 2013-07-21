@@ -52,34 +52,16 @@ the included [autoload_register.php](../README.md#manual-installation).
 
 ### 1) Make your classes ActiveRecords
 
-ActiveRecord is used to add database functionality to your existing model classes. For example, let's consider
-the following class:
+ActiveRecord is used to add database functionality to your existing model classes.
 
-````php
-class Country
-{
-    protected $name;
-
-    public function getName(){
-        return $this->name;
-    }
-
-    public function setName($name){
-        $this->name = $name;
-    }
-}
-````
-
-In order to make the class an ActiveRecord, at minimum, you have to add the following traits:
-
- 1. [ActiveRecord\Core](../src/Thinkscape/ActiveRecord/Core.php)
- 2. [ActiveRecord\Persistence](../src/Thinkscape/ActiveRecord/Persistence), one of the following:
-    [ZendDb](../src/Thinkscape/ActiveRecord/Persistence/ZendDb.php),
-    [DoctrineDBAL](../src/Thinkscape/ActiveRecord/Persistence/DoctrineDBAL.php),
-    [Mongo](../src/Thinkscape/ActiveRecord/Persistence/Mongo.php),
-    [Memory](../src/Thinkscape/ActiveRecord/Persistence/Memory.php).
-
-Let's update the class to make it an ActiveRecord using Zend\Db:
+1. Add [ActiveRecord\Core](../src/Thinkscape/ActiveRecord/Core.php) trait to your class.
+2. Add one of the following [ActiveRecord\Persistence](../src/Thinkscape/ActiveRecord/Persistence) traits:
+   [ZendDb](../src/Thinkscape/ActiveRecord/Persistence/ZendDb.php),
+   [DoctrineDBAL](../src/Thinkscape/ActiveRecord/Persistence/DoctrineDBAL.php),
+   [Mongo](../src/Thinkscape/ActiveRecord/Persistence/Mongo.php),
+   [Memory](../src/Thinkscape/ActiveRecord/Persistence/Memory.php).
+3. Define `$_properties` that will be be accessed in the database.
+4. Set `$_dbTable` for storing your data.
 
 ````php
 use Thinkscape\ActiveRecord;
@@ -92,7 +74,15 @@ class Country
     protected static $_dbTable    = 'countries';
     protected static $_properties = ['name'];
 
-    // ...
+    protected $name;
+
+    public function getName(){
+        return $this->name;
+    }
+
+    public function setName($name){
+        $this->name = $name;
+    }
 }
 ````
 
