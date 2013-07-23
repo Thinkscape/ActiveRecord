@@ -1,23 +1,27 @@
-ActiveRecord  [![Build Status](https://api.travis-ci.org/Thinkscape/ActiveRecord.png?branch=master)](http://travis-ci.org/Thinkscape/ActiveRecord) [![Coverage Status](https://coveralls.io/repos/Thinkscape/ActiveRecord/badge.png)](https://coveralls.io/r/Thinkscape/ActiveRecord)
+ActiveRecord [![Build Status](https://api.travis-ci.org/Thinkscape/ActiveRecord.png?branch=master)](http://travis-ci.org/Thinkscape/ActiveRecord) [![Coverage Status](https://coveralls.io/repos/Thinkscape/ActiveRecord/badge.png)](https://coveralls.io/r/Thinkscape/ActiveRecord)
 =============
 
 Modern ActiveRecord implementation for PHP 5.4+
 
-[ActiveRecord is an architectural pattern](https://en.wikipedia.org/wiki/Active_record_pattern) for adding
-database awareness and [CRUD](https://en.wikipedia.org/wiki/CRUD) functionality to domain objects. It is 
-simple to use, easy to maintain and performant when used together with well-designed userland code.
+It is simple to use, easy to maintain and performant when used together with well-designed userland
+code. [ActiveRecord is an architectural pattern](https://en.wikipedia.org/wiki/Active_record_pattern) for 
+adding database [CRUD](https://en.wikipedia.org/wiki/CRUD) functionality to domain objects. 
 
-The ActiveRecord pattern has been discussed, debated, critiqued and praised for decades. You can learn more
-about when to use it, when not to use it and what are some of the caveats in the following document: 
-[docs/discussion.md](docs/discussion.md).
+<br>
+
+| [Installation](#) | [Quick Start](#) | [Documentation](#) |
+| ----------------- | ---------------- | ------------------ | 
+-------------------------------------------------------------
 
 ## Installation
+
 ### Requirements
 
-  * PHP 5.4.3 or newer
-  * Database Abstraction Layer, one of the following:
-    * [Zend Framework 2.2 Zend\Db](https://github.com/zendframework/zf2) or
-    * [Doctrine DBAL 2.3+](https://github.com/doctrine/dbal)
+  * PHP 5.4.0 or newer
+  * Database connection using one of the following
+    * [Zend\Db](https://github.com/zendframework/zf2), 
+    * [Doctrine DBAL 2.3+](https://github.com/doctrine/dbal), 
+    * [Mongo](http://php.net/manual/en/mongo.installation.php)
 
 ### Installation using Composer
 
@@ -27,7 +31,7 @@ about when to use it, when not to use it and what are some of the caveats in the
 
 ### Manual installation
  
- 1. Obtain the source code with by either:
+ 1. Obtain the source code by either:
    * cloning git [project from github](https://github.com/Thinkscape/ActiveRecord.git), or
    * downloading and extracting [source package](https://github.com/Thinkscape/ActiveRecord/archive/master.zip).
  2. Set up class autoloading by either:
@@ -39,6 +43,18 @@ Before you jump into quick start, make sure you are using PHP 5.4, you have inst
 your application and you have included [Composer autoloader](../README.md#installation-using-composer) or
 the included [autoload_register.php](../README.md#manual-installation).
 
+### Using with Zend Framework 2
+
+ 1. Install source code using one of the above methods.
+ 2. Enable `TsActiveRecord` module in your `config/application.config.php`.
+ 3. Copy `docs/activerecord.global.php.dist` as `config/autoload/activerecord.global.php` inside your application dir.
+ 4. Edit `config/autoload/activerecord.global.php` and assign default db adapter.
+ 5. Read more about [using ActiveRecord with ZF2](docs/zend-framework-2.md)
+
+#### Using with Symfony 2
+
+ 1. Read more about [using ActiveRecord with Symfony 2](docs/zend-framework-2.md)
+
 ## Documentation
 
  * [Quick Start](#quick-start)
@@ -47,6 +63,7 @@ the included [autoload_register.php](../README.md#manual-installation).
  * [Queries and traversal](docs/queries.md)
  * [Persistence methods and DB configuration](docs/persistence.md)
  * [Features and add-ons](docs/features.md)
+ * [Theory and discussion on ActiveRecord pattern](docs/discussion.md)
 
 ## Quick Start
 
