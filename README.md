@@ -9,9 +9,9 @@ adding database [CRUD](https://en.wikipedia.org/wiki/CRUD) functionality to doma
 
 <br>
 
-| [Installation](#) | [Quick Start](#) | [Documentation](#) |
-| ----------------- | ---------------- | ------------------ | 
--------------------------------------------------------------
+| [Installation](#installation) | [Quick Start](#quick-start) | [Documentation](#documentation) |
+| ----------------------------- | --------------------------- | ------------------------------- | 
+-------------------------------------------------------------------------------------------------
 
 ## Installation
 
