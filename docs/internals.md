@@ -1,7 +1,7 @@
 Internal Structure
 =================================
 
-## Feature event system
+## Internal Event Manager
 
 ActiveRecord add-on features use an internal, lightweight event system for performing various tasks. Event listeners
 are registered inside `static::$_AREM` in the following structure:
@@ -69,3 +69,11 @@ listeners are invoked.
  * `Core.delete` - called after instance has been deleted from the database
      * `&$instance`  - a reference to the instance being deleted
 
+
+## Registry
+
+## Lifecycle management
+
+## Serialization
+
+## Subclassing
