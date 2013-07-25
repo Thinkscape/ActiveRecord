@@ -52,6 +52,13 @@ trait Core
     protected static $_isARinit = [];
 
     /**
+     * Static ActiveRecord instance registry, used to provide same object instances for records with the same ID.
+     *
+     * @var bool
+     */
+    protected static $_arRegistry = [];
+
+    /**
      * ActiveRecord internal Event Manager's listener stack
      *
      * @var array
@@ -95,6 +102,82 @@ trait Core
                 $this->__set($key, $val);
             }
         }
+    }
+
+    /**
+     * Retrieve instance for given unique id, or create a completely new instance.
+     *
+     * @param string|int|null $data ID of the object to retrieve, or an array of properties to create a completely
+     *                               new record. Use null to create a new record with default values.
+     * @return static
+     * @throws Exception\InvalidArgumentException
+     */
+    public static function factory($data = null)
+    {
+        if ($data !== null && !is_numeric($data) && !is_array($data) && !$data instanceof Traversable) {
+            throw new Exception\InvalidArgumentException(sprintf(
+                'Cannot get new instance of %s using %s - expected a number, array or \Traversable',
+                get_called_class(),
+                gettype($data)
+            ));
+        }
+
+        // Retrieve the instance by ID
+        $class = get_called_class();
+        if (is_numeric($data)) {
+
+            // Try to find the object reference in the registry
+            $instance = Core::getInstanceFromRegistry($class, (int) $data);
+
+            // If it wasn't found, create a new instance for this ID and add it to registry.
+            if (!$instance) {
+                $instance = new static([ 'id' => (int) $data ]);
+                Core::storeInstanceInRegistry($class, (int) $data, $instance);
+            }
+
+            return $instance;
+        }
+
+        // Create completely new instance but don't store it in registry yet (as we don't know the ID)
+        $instance = new static($data);
+
+        return $instance;
+    }
+
+    /**
+     * Retrieve instance from internal registry, or null if does not exist.
+     *
+     * @param  string  $class
+     * @param  integer $id
+     * @return static
+     */
+    public static function getInstanceFromRegistry($class, $id)
+    {
+        if(
+            !isset(self::$_arRegistry[$class]) ||
+            !isset(self::$_arRegistry[$class][$id])
+        ) {
+            return null;
+        }
+
+        return self::$_arRegistry[$class][$id];
+    }
+
+    /**
+     * Store a reference to a record in the internal registry.
+     * This is used to provide same object instances for records with the same ID.
+     *
+     * @param  string  $class
+     * @param  integer $id
+     * @param  object  $instance
+     * @return void
+     */
+    public static function storeInstanceInRegistry($class, $id, $instance)
+    {
+        if (!isset(self::$_arRegistry[$class])) {
+            self::$_arRegistry[$class] = [];
+        }
+        self::$_arRegistry[$class][$id] = $instance;
     }
 
     /**

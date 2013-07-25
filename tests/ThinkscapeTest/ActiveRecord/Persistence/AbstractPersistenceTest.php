@@ -40,7 +40,7 @@ abstract class AbstractPersistenceTest extends \PHPUnit_Framework_TestCase
     {
         $className = $this->getInstanceClass();
 
-        return new $className($config);
+        return $className::factory($config);
     }
 
     public function testBasicPersistenceInsert()
@@ -123,6 +123,7 @@ abstract class AbstractPersistenceTest extends \PHPUnit_Framework_TestCase
         $class = $this->getInstanceClass();
         $instance2 = $class::findById($instance->id);
         $this->assertInstanceOf($this->getInstanceClass(), $instance2);
+        $this->assertSame($instance, $instance2);
         $this->assertSame($instance->id, $instance2->id);
         $this->assertSame($instance->magicProperty, $instance2->magicProperty);
     }

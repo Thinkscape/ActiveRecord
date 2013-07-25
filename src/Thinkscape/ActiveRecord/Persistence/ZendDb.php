@@ -1,6 +1,7 @@
 <?php
 namespace Thinkscape\ActiveRecord\Persistence;
 
+use Thinkscape\ActiveRecord\Core;
 use Thinkscape\ActiveRecord\Exception;
 use Zend\Db\Adapter\Adapter;
 use Thinkscape\ActiveRecord\Exception\ConfigException;
@@ -66,6 +67,7 @@ trait ZendDb
      */
     protected static function findByIdInDb($id)
     {
+        $id = (int) $id;
         $db = static::getDefaultDb();
         $table = static::getStaticDbTable();
         $sql = new Sql($db);
@@ -82,7 +84,7 @@ trait ZendDb
         }
 
         // Create new instance
-        $instance = new static(['id' => $id]);
+        $instance = static::factory($id);
 
         return $instance;
     }
@@ -112,6 +114,9 @@ trait ZendDb
                     get_class($this)
                 ));
             }
+
+            // Store in registry
+            Core::storeInstanceInRegistry(get_called_class(), $this->id, $this);
 
         } else {
             // perform an UPDATE operation

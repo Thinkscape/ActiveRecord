@@ -1,6 +1,7 @@
 <?php
 namespace Thinkscape\ActiveRecord\Persistence;
 
+use Thinkscape\ActiveRecord\Core;
 use Thinkscape\ActiveRecord\Exception;
 
 /**
@@ -30,6 +31,10 @@ trait Memory
             // Update object state
             $this->_dirtyData = [];
             $this->isLoaded = true;
+
+            // Store in registry
+            Core::storeInstanceInRegistry(get_called_class(), $this->id, $this);
+
         } else {
             // perform an UPDATE operation
             if (!$this->isLoaded) {
@@ -130,6 +135,8 @@ trait Memory
 
     protected static function findByIdInDb($id)
     {
+        $id = (int) $id;
+
         // Get trait level storage
         $storage = & Memory::_getInternalStorage();
 
@@ -139,7 +146,7 @@ trait Memory
         }
 
         // Create new instance
-        $instance = new static(['id' => $id]);
+        $instance = static::factory($id);
 
         return $instance;
     }
