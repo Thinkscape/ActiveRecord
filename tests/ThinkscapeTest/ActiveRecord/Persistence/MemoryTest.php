@@ -2,8 +2,9 @@
 namespace ThinkscapeTest\ActiveRecord;
 
 use Thinkscape\ActiveRecord\Persistence\Memory;
+use ThinkscapeTest\ActiveRecord\TestAsset\CoreModel;
 
-abstract class MemoryPersistenceTest extends AbstractPersistenceTest
+class MemoryTest extends AbstractPersistenceTest
 {
 
     protected function assertEntityPersisted($instance)
@@ -18,5 +19,10 @@ abstract class MemoryPersistenceTest extends AbstractPersistenceTest
         $this->assertArrayHasKey($instance->id, $storage);
         $this->assertArrayHasKey($property, $storage[$instance->id]);
         $this->assertSame($value, $storage[$instance->id][$property]);
+    }
+
+    protected function getInstanceClass()
+    {
+        return 'ThinkscapeTest\ActiveRecord\TestAsset\CoreModel';
     }
 }

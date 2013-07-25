@@ -1,0 +1,35 @@
+<?php
+
+return array(
+    'zenddb' => array(
+
+        // by default, use Pdo_Sqlite
+        'driver'   => 'Pdo_Sqlite',
+        'hostname' => '127.0.0.1',
+        'database' => TEST_TMP_PATH . '/test.sqlite',
+        'username' => 'test',
+        'password' => 'test',
+
+        // example PDO MySQL configuration:
+        /*
+
+        'driver'   => 'Pdo_Mysql',
+        'hostname' => '127.0.0.1',
+        'database' => 'test',
+        'username' => 'test',
+        'password' => 'test',
+
+        */
+
+        // example postgresql configuration
+        /*
+
+        'driver'   => 'pgsql',
+        'hostname' => '127.0.0.1',
+        'database' => 'test',
+        'username' => 'test',
+        'password' => 'test',
+
+        */
+    )
+);

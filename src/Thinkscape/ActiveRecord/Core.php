@@ -43,13 +43,16 @@ trait Core
     protected $isLoaded = false;
 
     /**
-     * A map of
+     * A map of all classes that have performed Active Record initialization.
+     *
+     * See notes under __construct().
+     *
      * @var bool
      */
     protected static $_isARinit = [];
 
     /**
-     * ActiveRecord event manager static storage
+     * ActiveRecord internal Event Manager's listener stack
      *
      * @var array
      */
@@ -57,6 +60,9 @@ trait Core
 
     /**
      * Creates new ActiveRecord instance.
+     *
+     * Warning! In case you are creating your own, custom constructor, make sure to include code from this
+     * implementation. It contains initialization tasks, required for Active Record to work properly.
      *
      * @param  array|Traversable                  $data
      * @throws Exception\InvalidArgumentException
@@ -66,13 +72,16 @@ trait Core
         // Init AR features for this class. This is currently the only way to implement static,
         // class-level initialization tasks for classes using traits, because traits cannot
         // be extended, cannot access each-other methods and are mostly invisible to class methods
-        // on runtime.
+        // on runtime. It is not possible to implicitly perform initialization at class declaration
+        // time, nor at the moment a class uses a particular trait. We are using isset() together
+        // with get_called_class() which is the fastest way of determining if the initialization
+        // should be performed or not.
         if (!isset(static::$_isARinit[get_called_class()])) {
             static::initActiveRecord();
         }
 
         // validate incoming data
-        if (!is_array($data) && !$data instanceof Traversable) {
+        if ($data !== null && !is_array($data) && !$data instanceof Traversable) {
             throw new Exception\InvalidArgumentException(sprintf(
                 'Cannot construct new %s using %s - expected array or \Traversable',
                 get_called_class(),
@@ -81,8 +90,10 @@ trait Core
         }
 
         // assign values
-        foreach ($data as $key => $val) {
-            $this->__set($key, $val);
+        if ($data !== null) {
+            foreach ($data as $key => $val) {
+                $this->__set($key, $val);
+            }
         }
     }
 
@@ -97,12 +108,42 @@ trait Core
     }
 
     /**
+     * Set instance ID.
+     *
+     * This method can be called only once, and is usually called when creating the instance.
+     *
+     * @param $id
+     * @throws Exception\RuntimeException
+     * @return void
+     */
+    public function setId($id)
+    {
+        if ($this->id !== null) {
+            throw new Exception\RuntimeException('Unable to change id of an ActiveRecord instance');
+        }
+        $this->id = $id;
+    }
+
+    /**
+     * Find a record with the given id
+     *
+     * @param $id
+     * @return mixed|null
+     */
+    public static function findById($id)
+    {
+        // Call all registered findById listeners, providing them with the id we
+        // are searching for. This architecture allows for multi-tier
+        return static::_arTriggerUntilValue('Core.findById', array($id));
+    }
+
+    /**
      * Collect data for UPDATE or INSERT operation.
      *
      * @return array
      * @throws Exception\ConfigException
      */
-    public function collectUpdateData()
+    protected function collectUpdateData()
     {
         $updateData = [];
 
@@ -142,7 +183,8 @@ trait Core
     }
 
     /**
-     * Walk through all traits for current class and run init methods for features
+     * Walk through all traits for current class and run init methods for all features.
+     * This method is called only once for each class consuming ActiveRecord\Core.
      *
      * Warning: if this method is overridden in model class, you have to manually copy and paste the
      *          code from here, because it is currently impossible to change scope of static method calls;
@@ -153,6 +195,7 @@ trait Core
         $className = get_called_class();
         $traits = class_uses($className,false);
 
+        // Call initialization methods that are provided by individual traits
         foreach ($traits as $traitName) {
             $traitName = substr($traitName, strrpos($traitName, '\\') + 1);
             $initMethod = 'initAR' . $traitName;
@@ -166,7 +209,9 @@ trait Core
             }
         }
 
-        static::$_isARinit[get_called_class()] = true;
+        // We are using get_called_class() here to handle subclasses that might share the static
+        // variable storage with parent class but additional ActiveRecord features added on.
+        static::$_isARinit[$className] = true;
     }
 
     /**
@@ -186,6 +231,30 @@ trait Core
         foreach (static::$_AREM[$className][$eventName] as $callable) {
             call_user_func_array($callable, $arguments);
         }
+    }
+
+    /**
+     * Trigger listeners until one returns a non-null value
+     *
+     * @param  string     $eventName Name of the event to trigger
+     * @param  array      $arguments
+     * @return mixed|null
+     */
+    protected static function _arTriggerUntilValue($eventName, array $arguments = [])
+    {
+        $className = get_called_class();
+        if (empty(static::$_AREM[$className]) || empty(static::$_AREM[$className][$eventName]) ) {
+            return null;
+        }
+
+        foreach (static::$_AREM[$className][$eventName] as $callable) {
+            $value = call_user_func_array($callable, $arguments);
+            if ($value !== null) {
+                return $value;
+            }
+        }
+
+        return null;
     }
 
     /**
@@ -226,7 +295,7 @@ trait Core
     }
 
     /**
-     * Store property value
+     * Change property value.
      *
      * @param $prop
      * @param $val
@@ -238,6 +307,8 @@ trait Core
     {
         if (method_exists($this, 'set' . $prop)) {
             call_user_func(array($this, 'set' . $prop), $val);
+
+            return;
         }
 
         if ($this->id) {

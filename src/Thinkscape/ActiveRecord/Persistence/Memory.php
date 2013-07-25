@@ -21,9 +21,15 @@ trait Memory
             // Get the data
             $updateData = $this->collectUpdateData();
 
+            // Remember ID
             $this->id = (int) (microtime(true) * 1000);
+
+            // Store data
             $storage[$this->id] = $updateData;
 
+            // Update object state
+            $this->_dirtyData = [];
+            $this->isLoaded = true;
         } else {
             // perform an UPDATE operation
             if (!$this->isLoaded) {
@@ -37,6 +43,10 @@ trait Memory
             foreach ($updateData as $key => $val) {
                 $storage[$this->id][$key] = $val;
             }
+
+            // Update object state
+            $this->_dirtyData = [];
+            $this->isLoaded = true;
         }
     }
 
@@ -111,6 +121,27 @@ trait Memory
     public function getFieldsFromDatabase()
     {
         throw new Exception\ConfigException('Unable to retrieve fields from Memory persistence storage.');
+    }
+
+    public static function initARMemory()
+    {
+        static::$_AREM[get_called_class()]['Core.findById'][] = 'static::findByIdInDb';
+    }
+
+    protected static function findByIdInDb($id)
+    {
+        // Get trait level storage
+        $storage = & Memory::_getInternalStorage();
+
+        // Try to find in memory storage
+        if (!isset($storage[$id])) {
+            return null;
+        }
+
+        // Create new instance
+        $instance = new static(['id' => $id]);
+
+        return $instance;
     }
 
     public static function & _getInternalStorage()

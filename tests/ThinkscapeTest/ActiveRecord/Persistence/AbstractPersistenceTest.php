@@ -1,19 +1,51 @@
 <?php
 namespace ThinkscapeTest\ActiveRecord;
 
-use ThinkscapeTest\ActiveRecord\TestAsset\CoreModel;
-
 abstract class AbstractPersistenceTest extends \PHPUnit_Framework_TestCase
 {
     protected $instance;
 
+    /**
+     * Check that the entity has been stored in the database
+     *
+     * @param  object $entity
+     * @return void
+     */
     abstract protected function assertEntityPersisted($entity);
 
-    abstract protected function assertEntityPropertyPersisted($value, $instance, $property);
+    /**
+     * Check that entity has a property value correctly saved in the database
+     *
+     * @param  mixed  $expectedValue
+     * @param  object $instance
+     * @param  string $property
+     * @return void
+     */
+    abstract protected function assertEntityPropertyPersisted($expectedValue, $instance, $property);
+
+    /**
+     * Returns the instance class to use for all tests
+     *
+     * @return string
+     */
+    abstract protected function getInstanceClass();
+
+    /**
+     * Create new ActiveRecord instance for testing persistence.
+     *
+     * @param  null|array $config
+     * @return object
+     */
+    protected function newInstance($config = null)
+    {
+        $className = $this->getInstanceClass();
+
+        return new $className($config);
+    }
 
     public function testBasicPersistenceInsert()
     {
-        $instance = new CoreModel();
+        $instance = $this->newInstance();
         $instance->magicProperty = 'foo';
         $this->assertSame('foo', $instance->magicProperty);
         $instance->save();
@@ -31,7 +63,7 @@ abstract class AbstractPersistenceTest extends \PHPUnit_Framework_TestCase
      */
     public function testBasicPersistenceUpdate()
     {
-        $instance = new CoreModel();
+        $instance = $this->newInstance();
         $instance->magicProperty = 'foo';
         $instance->save();
 
@@ -43,15 +75,15 @@ abstract class AbstractPersistenceTest extends \PHPUnit_Framework_TestCase
         $instance->save();
 
         $this->assertEntityPersisted($instance);
-        $this->assertEntityPropertyPersisted('foo', $instance, 'magicProperty');
+        $this->assertEntityPropertyPersisted('bar', $instance, 'magicProperty');
     }
 
     /**
      * @depends testBasicPersistenceUpdate
      */
-    public function testBasicPersistenceReload()
+    public function testBasicPersistenceReloadDiscardsData()
     {
-        $instance = new CoreModel();
+        $instance = $this->newInstance();
         $instance->magicProperty = 'foo';
         $instance->save();
 
@@ -65,7 +97,7 @@ abstract class AbstractPersistenceTest extends \PHPUnit_Framework_TestCase
         $this->assertSame('foo', $instance->magicProperty);
 
         // Check the storage after reloading
-        $this->assertEntityPersisted($instance->id);
+        $this->assertEntityPersisted($instance);
         $this->assertEntityPropertyPersisted('foo', $instance, 'magicProperty');
 
         // Attempt a save() operation
@@ -75,25 +107,37 @@ abstract class AbstractPersistenceTest extends \PHPUnit_Framework_TestCase
         $this->assertSame('foo', $instance->magicProperty);
 
         // Check the storage is untouched
-        $this->assertEntityPersisted($instance->id);
+        $this->assertEntityPersisted($instance);
         $this->assertEntityPropertyPersisted('foo', $instance, 'magicProperty');
+    }
+
+    /**
+     * @depends testBasicPersistenceInsert
+     */
+    public function testBasicPersistenceLoad()
+    {
+        $instance = $this->newInstance();
+        $instance->magicProperty = mt_rand();
+        $instance->save();
+
+        $class = $this->getInstanceClass();
+        $instance2 = $class::findById($instance->id);
+        $this->assertInstanceOf($this->getInstanceClass(), $instance2);
+        $this->assertSame($instance->id, $instance2->id);
+        $this->assertSame($instance->magicProperty, $instance2->magicProperty);
     }
 
     public function testLoadingUnidentifiedEntityThrowsException()
     {
-        $instance = new CoreModel();
-        $instance->magicProperty = 'foo';
-
-        $this->setExpectedException('Thinkscape\ActiveRecord\Exception\RuntimeException');
+        $instance = $this->newInstance(['id' => 100000]);
+        $this->setExpectedException('Thinkscape\ActiveRecord\Exception\RecordNotFoundException');
         $instance->load();
     }
 
     public function testReloadingUnidentifiedEntityThrowsException()
     {
-        $instance = new CoreModel();
-        $instance->magicProperty = 'foo';
-
-        $this->setExpectedException('Thinkscape\ActiveRecord\Exception\RuntimeException');
+        $instance = $this->newInstance(['id' => 100000]);
+        $this->setExpectedException('Thinkscape\ActiveRecord\Exception\RecordNotFoundException');
         $instance->reload();
     }
 

@@ -1,8 +1,10 @@
 <?php
 namespace Thinkscape\ActiveRecord\Persistence;
 
+use Thinkscape\ActiveRecord\Exception;
 use Zend\Db\Adapter\Adapter;
 use Thinkscape\ActiveRecord\Exception\ConfigException;
+use Zend\Db\Sql\Sql;
 
 /**
  * Zend\Db based persistence functionality.
@@ -11,32 +13,19 @@ use Thinkscape\ActiveRecord\Exception\ConfigException;
  */
 trait ZendDb
 {
-    public function save()
-    {
-    }
-
-    public function load()
-    {
-    }
-
-    public function reload()
-    {
-    }
-
-    public function delete()
-    {
-    }
-
-    public function getPropertiesFromDb()
-    {
-    }
-
     /**
      * Instance's db adapter.
      *
      * @var Adapter|null
      */
     protected $_db;
+
+    /**
+     * Class Sql instance.
+     *
+     * @var Adapter|null
+     */
+    protected static $_sql;
 
     /**
      * Global, default db adapter (used/stored at trait level)
@@ -66,6 +55,181 @@ trait ZendDb
      */
     protected static $_subclassDefaultDb;
 
+    public static function initARZendDb()
+    {
+        static::$_AREM[get_called_class()]['Core.findById'][] = 'static::findByIdInDb';
+    }
+
+    /**
+     * @param $id
+     * @return null|static
+     */
+    protected static function findByIdInDb($id)
+    {
+        $db = static::getDefaultDb();
+        $table = static::getStaticDbTable();
+        $sql = new Sql($db);
+
+        // Try to find the row in db
+        $select = $sql->select($table)->columns(['id'])->limit(1)->where([
+            'id' => $id
+        ]);
+        $results = $db->query($select->getSqlString($db->getPlatform()))->execute();
+
+        // Check if a record has been retrieved
+        if (!$results->count()) {
+            return null;
+        }
+
+        // Create new instance
+        $instance = new static(['id' => $id]);
+
+        return $instance;
+    }
+
+    public function save()
+    {
+        $db = $this->getDb();
+        $sql = new Sql($db);
+
+        if (!$this->id) {
+            // perform an INSERT operation
+
+            // Get the data
+            $updateData = $this->collectUpdateData();
+
+            // Prepare and execute INSERT
+            $insert = $sql->insert($this->getDbTable())->values($updateData);
+            $db->query(
+                $insert->getSqlString($db->getPlatform()),
+                $db::QUERY_MODE_EXECUTE
+            );
+
+            // Remember ID
+            if (!$this->id = $db->getDriver()->getLastGeneratedValue()) {
+                throw new Exception\DatabaseException(sprintf(
+                    'Unable to retrieve INSERT id when trying to persist %s',
+                    get_class($this)
+                ));
+            }
+
+        } else {
+            // perform an UPDATE operation
+            if (!$this->isLoaded) {
+                throw new Exception\RuntimeException('Attempt to save() a record that has not been loaded');
+            }
+
+            // Get the data
+            $updateData = $this->collectUpdateData();
+
+            if (!count($updateData)) {
+                return; // there is nothing to update
+            }
+
+            // Prepare and execute UPDATE
+            $insert = $sql->update($this->getDbTable())->set($updateData);
+            $result = $db->query($insert->getSqlString($db->getPlatform()))->execute();
+
+            // Check if successful
+            if ($result->getAffectedRows() == 0) {
+                throw new Exception\DatabaseException(sprintf(
+                    'Unable to update record #%s in table %s (class %s)',
+                    $this->id,
+                    $this->getDbTable(),
+                    get_class($this)
+                ));
+            }
+        }
+    }
+
+    public function load()
+    {
+        // Check if already loaded
+        if ($this->isLoaded) {
+            return true;
+        }
+
+        // Check for ID
+        if (!$this->id) {
+            throw new Exception\RuntimeException('Attempt to load() a record without an ID');
+        }
+
+        $db = $this->getDb();
+        $sql = new Sql($db);
+
+        // Pick columns to load
+        $columns = array_keys(static::$_properties);
+
+        // Try to retrieve data from database
+        $select = $sql->select($this->getDbTable())->columns($columns)->limit(1)->where(array(
+            'id' => $this->id
+        ));
+        $results = $db->query($select->getSqlString($db->getPlatform()))->execute();
+
+        // Check if the record has been retrieved
+        if (!$results->count()) {
+            throw new Exception\RecordNotFoundException(get_class($this), $this->id);
+        }
+
+        // Load data
+        $row = $results->current();
+        $this->_data = $row;
+        $this->_dirtyData = [];
+        $this->isLoaded = true;
+    }
+
+    public function reload()
+    {
+        // Check if not loaded
+        if (!$this->isLoaded) {
+            return $this->load();
+        }
+
+        // Check for ID
+        if (!$this->id) {
+            throw new Exception\RuntimeException('Attempt to reload() a record without an ID');
+        }
+
+        // Reset instance status and load the record
+        $this->_data = [];
+        $this->_dirtyData = [];
+        $this->isLoaded = false;
+
+        return $this->load();
+    }
+
+    public function delete()
+    {
+        // Check for ID
+        if (!$this->id) {
+            throw new Exception\RuntimeException('Attempt to reload() a record without an ID');
+        }
+
+        $db = $this->getDb();
+        $sql = new Sql($db);
+
+        // Prepare delete and run it
+        $delete = $sql->delete($this->getDbTable())->where(array('id' => $this->id));
+        $result = $db->query($delete->getSqlString($db->getPlatform()))->execute();
+
+        // Check if successful
+        if ($result->getAffectedRows() == 0) {
+            throw new Exception\DatabaseException(sprintf(
+                'Unable to delete record #%s in table %s (class %s)',
+                $this->id,
+                $this->getDbTable(),
+                get_class($this)
+            ));
+        }
+
+        // Reset instance state
+        $this->isLoaded = false;
+    }
+
+    public function getPropertiesFromDb()
+    {
+    }
+
     /**
      * Return Zend\Db\Adapter to use for current operation
      *
@@ -86,9 +250,23 @@ trait ZendDb
     /**
      * Get db table (collection) name for storing this ActiveRecord data.
      *
+     * This method is declared as dynamic to allow for table-based sharding.
+     *
      * @return string
      */
     public function getDbTable()
+    {
+        return static::getStaticDbTable();
+    }
+
+    /**
+     * Get db table (collection) name for storing this ActiveRecord data.
+     *
+     * This static method is called from find* methods.
+     *
+     * @return string
+     */
+    public static function getStaticDbTable()
     {
         if (!empty(static::$_dbTable)) {
             return static::$_dbTable;
@@ -126,7 +304,7 @@ trait ZendDb
             return $db;
         }
 
-        return new ConfigException('Please configure a Zend\Db\Adapter instance to use with ActiveRecord.');
+        throw new ConfigException('Please configure a Zend\Db\Adapter instance to use with ActiveRecord.');
     }
 
     /**

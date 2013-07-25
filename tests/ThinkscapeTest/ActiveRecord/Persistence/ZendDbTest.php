@@ -4,7 +4,11 @@ namespace ThinkscapeTest\ActiveRecord;
 use Thinkscape\ActiveRecord\Persistence\ZendDb;
 use ThinkscapeTest\ActiveRecord\TestAsset\BaseSubclass;
 use ThinkscapeTest\ActiveRecord\TestAsset\BaseSuperclass;
+use ThinkscapeTest\ActiveRecord\TestAsset\ZendDbModel;
 use Zend\Db\Adapter\Adapter;
+use Zend\Db\Metadata\Metadata;
+use Zend\Db\Sql\Sql;
+use Zend\Db\Sql\Ddl;
 
 class ZendDbTest extends AbstractPersistenceTest
 {
@@ -13,11 +17,19 @@ class ZendDbTest extends AbstractPersistenceTest
      */
     protected $adapter;
 
+    protected static $schemaCleanup = false;
+
     public function setup()
     {
         if (!class_exists('Zend\Db\Adapter\Adapter')) {
             $this->markTestSkipped('Zend\Db is required for this test.');
         }
+
+        // Create new adapter
+        $this->adapter = $this->getAdapter();
+
+        // Set default adapter on classes
+        ZendDbModel::setDefaultDb($this->adapter);
     }
 
     public function tearDown()
@@ -26,24 +38,66 @@ class ZendDbTest extends AbstractPersistenceTest
             return;
         }
 
+        // drop test tables
+        if (static::$schemaCleanup) {
+            static::$schemaCleanup = false;
+
+            try {
+                $adapter = $this->adapter;
+                $ddl = new Ddl\DropTable('model');
+                $sql = new Sql($adapter);
+                $adapter->query($sql->getSqlStringForSqlObject($ddl))->execute();
+            } catch (\PDOException $e) {}
+        }
+
+        // disconnect
+        if ($this->adapter && $this->adapter->getDriver()->getConnection()->isConnected()) {
+            $this->adapter->getDriver()->getConnection()->disconnect();
+        }
+
         // reset default db adapter
+        ZendDbModel::setDefaultDb(null);
         ZendDb::setDefaultDb(null);
+    }
+
+    protected function getInstanceClass()
+    {
+        return 'ThinkscapeTest\ActiveRecord\TestAsset\ZendDbModel';
     }
 
     protected function assertEntityPersisted($entity)
     {
-        $this->markTestIncomplete('Zend\Db Persistence is not yet implemented');
+        $adapter = $this->adapter;
+        $sql = new Sql($adapter);
+        $select = $sql->select($entity->getDbTable())->where(array('id' => $entity->id))->columns(array('id'));
+        $result = $adapter->query($select->getSqlString($adapter->getPlatform()))->execute();
+        $this->assertEquals(
+            1,
+            $result->count(),
+            'Entity ' . get_class($entity) . ' #' . $entity->id . ' is persisted'
+        );
     }
 
-    protected function assertEntityPropertyPersisted($value, $instance, $property)
+    protected function assertEntityPropertyPersisted($value, $entity, $property)
     {
-        $this->markTestIncomplete('Zend\Db Persistence is not yet implemented');
+        $adapter = $this->adapter;
+        $sql = new Sql($adapter);
+        $select = $sql->select($entity->getDbTable())->where(array('id' => $entity->id))->columns(array($property));
+        $result = $adapter->query($select->getSqlString($adapter->getPlatform()))->execute();
+        $this->assertEquals(
+            1,
+            $result->count(),
+            'Entity ' . get_class($entity) . ' #' . $entity->id . ' is persisted'
+        );
+        $row = $result->current();
+        $this->assertArrayHasKey($property, $row);
+        $this->assertEquals($value, $row[$property], 'Entity property "' . $property . '"');
     }
 
     /**
      * @return Adapter
      */
-    public function getMockAdapter()
+    protected function getMockAdapter()
     {
         $mockDriver = $this->getMock('Zend\Db\Adapter\Driver\DriverInterface');
         $mockConnection = $this->getMock('Zend\Db\Adapter\Driver\ConnectionInterface');
@@ -54,6 +108,57 @@ class ZendDbTest extends AbstractPersistenceTest
         $mockDriver->expects($this->any())->method('createStatement')->will($this->returnValue($mockStatement));
 
         return new Adapter($mockDriver, $mockPlatform);
+    }
+
+    /**
+     * @return Adapter
+     */
+    protected function getAdapter()
+    {
+        global $globalTestConfiguration;
+
+        if (
+            !isset($globalTestConfiguration) ||
+            !isset($globalTestConfiguration['zenddb']) ||
+            !isset($globalTestConfiguration['zenddb']['driver'])
+        ) {
+            $this->markTestIncomplete(
+                'Invalid configuration found in test.config.php. Make sure "zenddb" is set and contains' .
+                'a valid config array for Zend\Db\Adapter\Adapter'
+            );
+        }
+
+        $this->adapter = $adapter = new Adapter($globalTestConfiguration['zenddb']);
+
+        // attempt to connect
+        $adapter->getDriver()->getConnection()->connect();
+        $this->assertTrue($adapter->getDriver()->getConnection()->isConnected(), 'DB connection established.');
+
+        $meta = new Metadata($adapter);
+        $sql = new Sql($adapter);
+
+        static::$schemaCleanup = true;
+
+        // drop previous tables if needed
+        if (in_array('model', $meta->getTableNames())) {
+            $ddl = new Ddl\DropTable('model');
+            $adapter->query($sql->getSqlStringForSqlObject($ddl))->execute();
+        }
+
+        // create test tables
+        $ddl = new Ddl\CreateTable('model');
+        $ddl->addColumn(new Ddl\Column\Integer('id', true, null, ['auto_increment' => true, 'comment' => 'Some comment']));
+        $ddl->addColumn((new Ddl\Column\Varchar('magicProperty', 255))->setNullable(true));
+        $ddl->addColumn((new Ddl\Column\Varchar('protectedProperty', 255))->setNullable(true));
+        $ddl->addConstraint(new Ddl\Constraint\PrimaryKey('id'));
+
+        $adapter->query(
+            $sql->getSqlStringForSqlObject($ddl),
+            $adapter::QUERY_MODE_EXECUTE
+        );
+
+        // return the adapter
+        return $adapter;
     }
 
     public function testSetDefaultGlobalDb()
@@ -136,7 +241,6 @@ class ZendDbTest extends AbstractPersistenceTest
         $instance2 = new BaseSubclass();
         $this->assertSame($adapter3, $instance2->publicGetDb());
         $this->assertSame($adapter3, $instance2::publicStaticGetDb());
-
     }
 
 }
