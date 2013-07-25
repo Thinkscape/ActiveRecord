@@ -17,8 +17,8 @@ class CoreModel
     protected $protectedProperty;
 
     protected static $_properties = [
-        'magicProperty'     => true,
-        'protectedProperty' => true,
+        'magicProperty',                // < this property is set inline
+        'protectedProperty' => true,    // < this property does not have any properties, but a boolean
     ];
 
     /**

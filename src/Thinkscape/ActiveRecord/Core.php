@@ -230,33 +230,8 @@ trait Core
     {
         $updateData = [];
 
-        // Make sure we know all property names
-        if (!static::$_properties) {
-            if (!isset(static::$_retrievePropertiesFromDb) || static::$_retrievePropertiesFromDb) {
-                static::getPropertiesFromDatabase();
-            } else {
-                throw new Exception\ConfigException(sprintf(
-                    'Missing property configuration for class %s',
-                    get_called_class()
-                ));
-            }
-        }
         // Run through all properties and retrieve data that has changed
         foreach (static::$_properties as $property => $attributes) {
-            // Normalize properties configured without attributes
-            if (is_integer($property)) {
-                if (!is_string($attributes)) {
-                    throw new Exception\ConfigException(sprintf(
-                        'Cannot understand property %s definition of %s',
-                        (int) $property,
-                        get_called_class()
-                    ));
-                }
-
-                $property = $attributes;
-                $attributes = array();
-            }
-
             if (isset($this->_dirtyData[$property])) {
                 $updateData[$property] = $this->__get($property);
             }
@@ -277,6 +252,56 @@ trait Core
     {
         $className = get_called_class();
         $traits = class_uses($className,false);
+
+        // Make sure we know all property names
+        if (!isset(static::$_properties) || !static::$_properties) {
+            if (
+                (!isset(static::$_retrievePropertiesFromDb) || static::$_retrievePropertiesFromDb) &&
+                method_exists($className, 'getPropertiesFromDb')
+            ) {
+                static::getPropertiesFromDb();
+            } else {
+                throw new Exception\ConfigException(sprintf(
+                    'Missing property configuration for class %s',
+                    get_called_class()
+                ));
+            }
+        }
+
+        // Normalize properties array
+        $normalizedProperties = [];
+        foreach (static::$_properties as $property => $attributes) {
+            if (is_integer($property)) {
+                if (!is_string($attributes)) {
+                    throw new Exception\ConfigException(sprintf(
+                        'Cannot understand property %s definition of %s',
+                        (int) $property,
+                        get_called_class()
+                    ));
+                }
+
+                $property = $attributes;
+            }
+
+            // Normalize attributes array
+            if (!is_array($attributes)) {
+                if (is_string($attributes)) {
+                    $attributes = [ 'alias' => $attributes ];
+                } elseif (is_bool($attributes)) {
+                    $attributes = [];
+                } else {
+                    throw new Exception\ConfigException(sprintf(
+                        'Cannot understand property %s definition - expected array or string, but got %s',
+                        $property,
+                        gettype($attributes)
+                    ));
+                }
+            }
+
+            $normalizedProperties[$property] = $attributes;
+        }
+
+        static::$_properties = $normalizedProperties;
 
         // Call initialization methods that are provided by individual traits
         foreach ($traits as $traitName) {
@@ -414,18 +439,6 @@ trait Core
             }
 
         } else {
-            // We are working with a completely new object. Make sure we know all property names
-            if (!static::$_properties) {
-                if (!isset(static::$_retrievePropertiesFromDb) || static::$_retrievePropertiesFromDb) {
-                    static::getPropertiesFromDatabase();
-                } else {
-                    throw new Exception\ConfigException(sprintf(
-                        'Missing property configuration for class %s',
-                        get_called_class()
-                    ));
-                }
-            }
-
             // Check if column (property) exists before trying to set it
             if (array_key_exists($prop, static::$_properties)) {
 

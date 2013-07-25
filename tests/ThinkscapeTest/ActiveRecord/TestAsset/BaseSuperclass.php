@@ -8,6 +8,8 @@ class BaseSuperclass extends AbstractActiveRecord
 {
     use Persistence\ZendDb;
 
+    protected static $_properties = ['name'];
+
     public function publicGetDb()
     {
         return $this->getDb();
