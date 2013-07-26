@@ -1,10 +1,12 @@
 <?php
 namespace ThinkscapeTest\ActiveRecord;
 
+use Thinkscape\ActiveRecord\Core;
 use Thinkscape\ActiveRecord\Persistence\ZendDb;
 use ThinkscapeTest\ActiveRecord\TestAsset\BaseSubclass;
 use ThinkscapeTest\ActiveRecord\TestAsset\BaseSuperclass;
-use ThinkscapeTest\ActiveRecord\TestAsset\ZendDbModel;
+use ThinkscapeTest\ActiveRecord\TestAsset\ZendDb\MinimalModel;
+use ThinkscapeTest\ActiveRecord\TestAsset\ZendDb\Model;
 use Zend\Db\Adapter\Adapter;
 use Zend\Db\Metadata\Metadata;
 use Zend\Db\Sql\Sql;
@@ -29,7 +31,8 @@ class ZendDbTest extends AbstractPersistenceTest
         $this->adapter = $this->getAdapter();
 
         // Set default adapter on classes
-        ZendDbModel::setDefaultDb($this->adapter);
+        Model::setDefaultDb($this->adapter);
+        MinimalModel::setDefaultDb($this->adapter);
     }
 
     public function tearDown()
@@ -56,13 +59,17 @@ class ZendDbTest extends AbstractPersistenceTest
         }
 
         // reset default db adapter
-        ZendDbModel::setDefaultDb(null);
+        Model::setDefaultDb(null);
+        MinimalModel::setDefaultDb(null);
         ZendDb::setDefaultDb(null);
+
+        // clear instance registry
+        Core::clearInstanceRegistry();
     }
 
-    protected function getInstanceClass()
+    protected function getTestAssetNS()
     {
-        return 'ThinkscapeTest\ActiveRecord\TestAsset\ZendDbModel';
+        return 'ThinkscapeTest\ActiveRecord\TestAsset\ZendDb';
     }
 
     protected function assertEntityPersisted($entity)
@@ -92,6 +99,27 @@ class ZendDbTest extends AbstractPersistenceTest
         $row = $result->current();
         $this->assertArrayHasKey($property, $row);
         $this->assertEquals($value, $row[$property], 'Entity property "' . $property . '"');
+    }
+
+    /**
+     * Insert entity data into the database
+     *
+     * @param  string $class Class name of object being created
+     * @param  array  $data  The data to insert
+     * @return int    The ID of newly inserted record
+     */
+    protected function injectDbWithEntityData($class, $data = [])
+    {
+        $table = $class::getStaticDbTable();
+        $adapter = $this->adapter;
+        $sql = new Sql($adapter);
+        $select = $sql->insert($table)->values($data);
+        $result = $adapter->query($select->getSqlString($adapter->getPlatform()))->execute();
+        $this->assertNotNull($result->getAffectedRows());
+        $id = $adapter->getDriver()->getLastGeneratedValue();
+        $this->assertTrue(is_numeric($id));
+
+        return (int) $id;
     }
 
     /**
@@ -144,18 +172,25 @@ class ZendDbTest extends AbstractPersistenceTest
             $ddl = new Ddl\DropTable('model');
             $adapter->query($sql->getSqlStringForSqlObject($ddl))->execute();
         }
+        if (in_array('minimalmodel', $meta->getTableNames())) {
+            $ddl = new Ddl\DropTable('minimalmodel');
+            $adapter->query($sql->getSqlStringForSqlObject($ddl))->execute();
+        }
 
         // create test tables
         $ddl = new Ddl\CreateTable('model');
-        $ddl->addColumn(new Ddl\Column\Integer('id', true, null, ['auto_increment' => true, 'comment' => 'Some comment']));
+        $ddl->addColumn(new Ddl\Column\Integer('id', true, null, ['auto_increment' => true]));
         $ddl->addColumn((new Ddl\Column\Varchar('magicProperty', 255))->setNullable(true));
         $ddl->addColumn((new Ddl\Column\Varchar('protectedProperty', 255))->setNullable(true));
         $ddl->addConstraint(new Ddl\Constraint\PrimaryKey('id'));
+        $adapter->query($sql->getSqlStringForSqlObject($ddl), $adapter::QUERY_MODE_EXECUTE);
 
-        $adapter->query(
-            $sql->getSqlStringForSqlObject($ddl),
-            $adapter::QUERY_MODE_EXECUTE
-        );
+        $ddl = new Ddl\CreateTable('minimalmodel');
+        $ddl->addColumn(new Ddl\Column\Integer('id', true, null, ['auto_increment' => true]));
+        $ddl->addColumn((new Ddl\Column\Varchar('name', 255))->setNullable(true));
+        $ddl->addColumn((new Ddl\Column\Varchar('value', 255))->setNullable(true));
+        $ddl->addConstraint(new Ddl\Constraint\PrimaryKey('id'));
+        $adapter->query($sql->getSqlStringForSqlObject($ddl), $adapter::QUERY_MODE_EXECUTE);
 
         // return the adapter
         return $adapter;

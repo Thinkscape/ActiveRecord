@@ -19,6 +19,7 @@ interface PersistenceInterface
 
     /**
      * Reload data from the database
+     *
      * @return void
      */
     public function reload();
@@ -29,11 +30,4 @@ interface PersistenceInterface
      * @return mixed
      */
     public function delete();
-
-    /**
-     * Retrieve model field names from the database
-     *
-     * @return mixed
-     */
-    public static function getPropertiesFromDb();
 }

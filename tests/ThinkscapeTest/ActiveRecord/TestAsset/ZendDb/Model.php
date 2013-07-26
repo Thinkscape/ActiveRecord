@@ -1,10 +1,10 @@
 <?php
-namespace ThinkscapeTest\ActiveRecord\TestAsset;
+namespace ThinkscapeTest\ActiveRecord\TestAsset\ZendDb;
 
 use Thinkscape\ActiveRecord\Core;
 use Thinkscape\ActiveRecord\Persistence;
 
-class ZendDbModel
+class Model
 {
     use Core;
     use Persistence\ZendDb;

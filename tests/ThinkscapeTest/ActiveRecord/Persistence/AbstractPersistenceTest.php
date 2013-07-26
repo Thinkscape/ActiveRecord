@@ -24,21 +24,31 @@ abstract class AbstractPersistenceTest extends \PHPUnit_Framework_TestCase
     abstract protected function assertEntityPropertyPersisted($expectedValue, $instance, $property);
 
     /**
-     * Returns the instance class to use for all tests
+     * Returns the namespace for test assets
      *
      * @return string
      */
-    abstract protected function getInstanceClass();
+    abstract protected function getTestAssetNS();
+
+    /**
+     * Insert entity data into the database
+     *
+     * @param  string $class Class name of object being created
+     * @param  array  $data  The data to insert
+     * @return int    The ID of newly inserted record
+     */
+    abstract protected function injectDbWithEntityData($class, $data = []);
 
     /**
      * Create new ActiveRecord instance for testing persistence.
      *
      * @param  null|array $config
+     * @param  string     $type
      * @return object
      */
-    protected function newInstance($config = null)
+    protected function newInstance($config = null, $type = 'Model')
     {
-        $className = $this->getInstanceClass();
+        $className = $this->getTestAssetNS() . '\\' . $type;
 
         return $className::factory($config);
     }
@@ -116,16 +126,43 @@ abstract class AbstractPersistenceTest extends \PHPUnit_Framework_TestCase
      */
     public function testBasicPersistenceLoad()
     {
+        $class = $this->getTestAssetNS() . '\\Model';
+        $data = ['magicProperty' => mt_rand()];
+
+        $id = $this->injectDbWithEntityData($class, $data);
+
+        $instance = $class::findById($id);
+        $this->assertInstanceOf($class, $instance);
+        $this->assertEquals($id, $instance->id);
+        $this->assertEquals($data['magicProperty'], $instance->magicProperty);
+    }
+
+    /**
+     * @depends testBasicPersistenceInsert
+     */
+    public function testRegistryServingSameObjectReference()
+    {
         $instance = $this->newInstance();
         $instance->magicProperty = mt_rand();
         $instance->save();
 
-        $class = $this->getInstanceClass();
+        $class = $this->getTestAssetNS() . '\\Model';
         $instance2 = $class::findById($instance->id);
-        $this->assertInstanceOf($this->getInstanceClass(), $instance2);
+        $this->assertInstanceOf($class, $instance2);
         $this->assertSame($instance, $instance2);
-        $this->assertSame($instance->id, $instance2->id);
-        $this->assertSame($instance->magicProperty, $instance2->magicProperty);
+    }
+
+    public function testAutoTableName()
+    {
+        $instance = $this->newInstance([], 'MinimalModel');
+        $value = $instance->value = mt_rand();
+        $name  = $instance->name  = mt_rand();
+        $instance->save();
+
+        $class = $this->getTestAssetNS() . '\\MinimalModel';
+        $instance2 = $class::findById($instance->id);
+        $this->assertInstanceOf($class, $instance2);
+        $this->assertSame($instance, $instance2);
     }
 
     public function testLoadingUnidentifiedEntityThrowsException()

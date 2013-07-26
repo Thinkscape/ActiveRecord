@@ -89,6 +89,13 @@ trait ZendDb
         return $instance;
     }
 
+    /**
+     * Store instance data in the database
+     *
+     * @throws \Thinkscape\ActiveRecord\Exception\DatabaseException
+     * @throws \Thinkscape\ActiveRecord\Exception\RuntimeException
+     * @return void
+     */
     public function save()
     {
         $db = $this->getDb();
@@ -147,6 +154,13 @@ trait ZendDb
         }
     }
 
+    /**
+     * Load instance data from the database
+     *
+     * @throws \Thinkscape\ActiveRecord\Exception\RuntimeException
+     * @throws \Thinkscape\ActiveRecord\Exception\RecordNotFoundException
+     * @return void
+     */
     public function load()
     {
         // Check if already loaded
@@ -183,11 +197,19 @@ trait ZendDb
         $this->isLoaded = true;
     }
 
+    /**
+     * Reload data from the database
+     *
+     * @throws \Thinkscape\ActiveRecord\Exception\RuntimeException
+     * @return void
+     */
     public function reload()
     {
         // Check if not loaded
         if (!$this->isLoaded) {
-            return $this->load();
+            $this->load();
+
+            return;
         }
 
         // Check for ID
@@ -200,9 +222,16 @@ trait ZendDb
         $this->_dirtyData = [];
         $this->isLoaded = false;
 
-        return $this->load();
+        $this->load();
     }
 
+    /**
+     * Delete the instance presence from the database
+     *
+     * @throws \Thinkscape\ActiveRecord\Exception\RuntimeException
+     * @throws \Thinkscape\ActiveRecord\Exception\DatabaseException
+     * @return mixed
+     */
     public function delete()
     {
         // Check for ID
@@ -229,10 +258,6 @@ trait ZendDb
 
         // Reset instance state
         $this->isLoaded = false;
-    }
-
-    public function getPropertiesFromDb()
-    {
     }
 
     /**
@@ -281,7 +306,7 @@ trait ZendDb
             $table = substr($table, strrpos($table, '\\') + 1);
             $table = strtolower($table);
 
-            return static::$_dbTable = $table;
+            return $table;
         }
     }
 

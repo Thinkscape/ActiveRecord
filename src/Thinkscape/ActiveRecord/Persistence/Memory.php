@@ -15,6 +15,12 @@ trait Memory
     {
         // Get trait level storage
         $storage = & Memory::_getInternalStorage();
+        $class = get_called_class();
+
+        // Make sure there's class-specific container
+        if (!isset($storage[$class])) {
+            $storage[$class] = [];
+        }
 
         if (!$this->id) {
             // perform an INSERT operation
@@ -26,7 +32,7 @@ trait Memory
             $this->id = (int) (microtime(true) * 1000);
 
             // Store data
-            $storage[$this->id] = $updateData;
+            $storage[$class][$this->id] = $updateData;
 
             // Update object state
             $this->_dirtyData = [];
@@ -46,7 +52,7 @@ trait Memory
 
             // Store in memory
             foreach ($updateData as $key => $val) {
-                $storage[$this->id][$key] = $val;
+                $storage[$class][$this->id][$key] = $val;
             }
 
             // Update object state
@@ -69,14 +75,15 @@ trait Memory
 
         // Get trait level storage
         $storage = & Memory::_getInternalStorage();
+        $class = get_called_class();
 
         // Try to find in memory storage
-        if (!isset($storage[$this->id])) {
+        if (!isset($storage[$class]) || !isset($storage[$class][$this->id])) {
             throw new Exception\RecordNotFoundException(get_called_class(), $this->id);
         }
 
         // Load data
-        $this->_data = $storage[$this->id];
+        $this->_data = $storage[$class][$this->id];
         $this->_dirtyData = [];
         $this->isLoaded = true;
     }
@@ -110,22 +117,18 @@ trait Memory
 
         // Get trait level storage
         $storage = & Memory::_getInternalStorage();
+        $class = get_called_class();
 
         // Try to find in memory storage
-        if (!isset($storage[$this->id])) {
+        if (!isset($storage[$class]) || !isset($storage[$class][$this->id])) {
             throw new Exception\RecordNotFoundException(get_called_class(), $this->id);
         }
 
         // Remove from storage
-        unset($storage[$this->id]);
+        unset($storage[$class][$this->id]);
 
         // Reset instance state
         $this->isLoaded = false;
-    }
-
-    public function getFieldsFromDatabase()
-    {
-        throw new Exception\ConfigException('Unable to retrieve fields from Memory persistence storage.');
     }
 
     public static function initARMemory()
@@ -136,12 +139,13 @@ trait Memory
     protected static function findByIdInDb($id)
     {
         $id = (int) $id;
+        $class = get_called_class();
 
         // Get trait level storage
         $storage = & Memory::_getInternalStorage();
 
         // Try to find in memory storage
-        if (!isset($storage[$id])) {
+        if (!isset($storage[$class]) || !isset($storage[$class][$id])) {
             return null;
         }
 

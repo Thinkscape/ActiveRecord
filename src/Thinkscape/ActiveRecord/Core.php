@@ -181,6 +181,16 @@ trait Core
     }
 
     /**
+     * Clear the internal instance registry
+     *
+     * @return void
+     */
+    public static function clearInstanceRegistry()
+    {
+        self::$_arRegistry = [];
+    }
+
+    /**
      * Get current ID or null in case the record has not been yet stored in the DB.
      *
      * @return int|null
@@ -255,17 +265,10 @@ trait Core
 
         // Make sure we know all property names
         if (!isset(static::$_properties) || !static::$_properties) {
-            if (
-                (!isset(static::$_retrievePropertiesFromDb) || static::$_retrievePropertiesFromDb) &&
-                method_exists($className, 'getPropertiesFromDb')
-            ) {
-                static::getPropertiesFromDb();
-            } else {
-                throw new Exception\ConfigException(sprintf(
-                    'Missing property configuration for class %s',
-                    get_called_class()
-                ));
-            }
+            throw new Exception\ConfigException(sprintf(
+                'Missing property configuration for class %s',
+                get_called_class()
+            ));
         }
 
         // Normalize properties array
