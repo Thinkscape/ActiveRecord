@@ -62,34 +62,6 @@ trait ZendDb
     }
 
     /**
-     * @param $id
-     * @return null|static
-     */
-    protected static function findByIdInDb($id)
-    {
-        $id = (int) $id;
-        $db = static::getDefaultDb();
-        $table = static::getStaticDbTable();
-        $sql = new Sql($db);
-
-        // Try to find the row in db
-        $select = $sql->select($table)->columns(['id'])->limit(1)->where([
-            'id' => $id
-        ]);
-        $results = $db->query($select->getSqlString($db->getPlatform()))->execute();
-
-        // Check if a record has been retrieved
-        if (!$results->count()) {
-            return null;
-        }
-
-        // Create new instance
-        $instance = static::factory($id);
-
-        return $instance;
-    }
-
-    /**
      * Store instance data in the database
      *
      * @throws \Thinkscape\ActiveRecord\Exception\DatabaseException
@@ -266,7 +238,7 @@ trait ZendDb
      * @throws ConfigException
      * @return Adapter
      */
-    protected function getDb()
+    public function getDb()
     {
         // Try to retrieve the db instance that's associated with this instance.
         if ($this->_db) {
@@ -275,6 +247,16 @@ trait ZendDb
 
         // Try to get the default database for this class
         return static::getDefaultDb();
+    }
+
+    /**
+     * Set instance-specific DB adapter
+     *
+     * @param Adapter $db
+     */
+    public function setDb(Adapter $db)
+    {
+        $this->_db = $db;
     }
 
     /**
@@ -288,6 +270,35 @@ trait ZendDb
     {
         return static::getStaticDbTable();
     }
+
+    /**
+     * @param $id
+     * @return null|static
+     */
+    protected static function findByIdInDb($id)
+    {
+        $id = (int) $id;
+        $db = static::getDefaultDb();
+        $table = static::getStaticDbTable();
+        $sql = new Sql($db);
+
+        // Try to find the row in db
+        $select = $sql->select($table)->columns(['id'])->limit(1)->where([
+            'id' => $id
+        ]);
+        $results = $db->query($select->getSqlString($db->getPlatform()))->execute();
+
+        // Check if a record has been retrieved
+        if (!$results->count()) {
+            return null;
+        }
+
+        // Create new instance
+        $instance = static::factory($id);
+
+        return $instance;
+    }
+
 
     /**
      * Get db table (collection) name for storing this ActiveRecord data.
@@ -395,13 +406,4 @@ trait ZendDb
         self::$_subclassDefaultDb[$calledClass] = $db;
     }
 
-    /**
-     * Set instance-specific DB adapter
-     *
-     * @param Adapter $db
-     */
-    public function setDb(Adapter $db)
-    {
-        $this->_db = $db;
-    }
 }
