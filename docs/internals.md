@@ -72,6 +72,42 @@ listeners are invoked.
 
 ## Registry
 
+ActiveRecord `factory()` and [find* methods](queries.md) guarantee PHP instance persistence - this means that fetching
+the same object (same class and ID) multiple times will always return the same object instance for the lifetime of the
+application. This is archived using an internal instance Registry inside `ActiveRecord\Core`.
+
+The following public registry methods are available, however they should only be used by Features:
+
+````php
+    /**
+     * Retrieve instance from internal registry, or null if does not exist.
+     *
+     * @param  string  $class
+     * @param  integer $id
+     * @return static
+     */
+    public static function getInstanceFromRegistry($class, $id);
+
+    /**
+     * Store a reference to a record in the internal registry.
+     * This is used to provide same object instances for records with the same ID.
+     *
+     * @param  string  $class
+     * @param  integer $id
+     * @param  object  $instance
+     * @return void
+     */
+    public static function storeInstanceInRegistry($class, $id, $instance);
+
+    /**
+     * Clear the internal instance registry
+     *
+     * @return void
+     */
+    public static function clearInstanceRegistry();
+````
+
+
 ## Lifecycle management
 
 ## Serialization
