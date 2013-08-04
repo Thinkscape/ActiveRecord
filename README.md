@@ -69,16 +69,8 @@ the included [autoload_register.php](../README.md#manual-installation).
 
 ### 1) Make your classes ActiveRecords
 
-ActiveRecord is used to add database functionality to your existing model classes.
-
-1. Add [ActiveRecord\Core](../src/Thinkscape/ActiveRecord/Core.php) trait to your class.
-2. Add one of the following [ActiveRecord\Persistence](../src/Thinkscape/ActiveRecord/Persistence) traits:
-   [ZendDb](../src/Thinkscape/ActiveRecord/Persistence/ZendDb.php),
-   [DoctrineDBAL](../src/Thinkscape/ActiveRecord/Persistence/DoctrineDBAL.php),
-   [Mongo](../src/Thinkscape/ActiveRecord/Persistence/Mongo.php),
-   [Memory](../src/Thinkscape/ActiveRecord/Persistence/Memory.php).
-3. Define `$_properties` that will be be accessed in the database.
-4. Set `$_dbTable` for storing your data.
+ActiveRecord is used to add database functionality to your existing model classes. Let's create a simple
+active record class.
 
 ````php
 use Thinkscape\ActiveRecord;
@@ -89,24 +81,14 @@ class Country
     use ActiveRecord\Persistence\ZendDb;
 
     protected static $_dbTable    = 'countries';
-    protected static $_properties = ['name'];
-
-    protected $name;
-
-    public function getName(){
-        return $this->name;
-    }
-
-    public function setName($name){
-        $this->name = $name;
-    }
+    protected static $_properties = [ 'name', 'continent', 'population' ];
 }
 ````
 
-> More info on [configuring ActiveRecords](docs/config.md)
+> [More info on configuring ActiveRecords](docs/config.md)
 
 
-### 2) Connect to the database
+### 2) Connect to a database
 
 All [persistence methods](persistence.md) (such as ZendDb, DoctrineDBAL, ...) require a working database connection.
 We have to create a new connection adapter and configure it with ActiveRecord:
